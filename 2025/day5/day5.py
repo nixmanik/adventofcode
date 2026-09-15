@@ -5,33 +5,52 @@ def get_data():
 
     with open('ingredients.txt', 'r') as file:
         for line in file:
-            line = line.strip()
+            l = line.strip()
+        
+            if not l:
+               print("line break")
+               continue
 
-            if not line:
-                fresh_ids_complete = True
-                continue
+            if '-' in l:
+                print(f'Fresh ID range: {l}')
+                start, end = l.split('-')
+                fresh_ids.append((int(start), int(end)))
+            elif l.isalnum():
 
-            if not fresh_ids_complete:
-                start, end = line.split('-')
-                for num in range(int(start), int(end) + 1):
-                    fresh_ids.append(num)
-                
-            else:
-                ingredient_ids.append(int(line))
+                # print(f'Ingredient ID: {line}')
+                ingredient_ids.append(int(l))
 
     return fresh_ids, ingredient_ids
 
 def available_fresh(fresh_ids, ing_ids):
     available = []
-    for ing in ing_ids:
-        if ing in fresh_ids:
-            available.append(ing)
+    for ing in set(ing_ids):
+        for start,end in fresh_ids:
+            if start <= ing <= end:
+                available.append(ing)
+                break
     return available
+
+def all_fresh_count(fresh_ids):
+    fresh_ids.sort(key=lambda x: x[0])
+    # print(fresh_ids)
+    merged = [fresh_ids[0]] if fresh_ids else []
+    for current in fresh_ids[1:]:
+        prev_s, prev_e = merged[-1]
+        curr_s, curr_e = current
+
+        if curr_s <= prev_e + 1:
+            merged[-1] = prev_s, max(prev_e, curr_e)
+        else:
+            merged.append(current)
+    return sum(end - start + 1 for start, end in merged)
+
 
 def main():
     fresh, ing = get_data()
     available = available_fresh(fresh, ing)
     print(len(available))
+    print(all_fresh_count(fresh))
 
 if __name__ == "__main__":
     main()
